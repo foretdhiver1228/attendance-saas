@@ -3,16 +3,34 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AttendanceTracker from './components/AttendanceTracker';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
-import AdminDashboard from './components/AdminDashboard'; // Import AdminDashboard
+import AdminDashboard from './components/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<AttendanceTracker />} />
+        {/* Public Routes */}
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} /> {/* New Admin Dashboard Route */}
+
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AttendanceTracker />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
