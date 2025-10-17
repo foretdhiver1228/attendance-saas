@@ -15,6 +15,13 @@
   - 직원의 생성, 정보 수정, 삭제 (CRUD)
   - 모바일/데스크탑 환경에 반응하는 UI
 
+## 🚀 현재 상태
+
+- **회원가입 및 로그인:** 정상 작동합니다.
+- **사용자 프로필 조회 (`/api/users/me`):** 정상 작동합니다.
+- **WebSocket 연결:** 정상 작동합니다.
+- **출퇴근 기록 조회 (`/api/attendance/{employeeId}`):** 현재 403 Forbidden 오류가 발생하여 디버깅 중입니다. (`SecurityConfig.java`에서 임시로 `permitAll()` 설정)
+
 ## 🛠️ 기술 스택
 
 - ### **Backend**

@@ -13,7 +13,7 @@ const api = axios.create({
 // Add a request interceptor to include the token in headers
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('jwtToken');
+        const token = sessionStorage.getItem('jwtToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -23,5 +23,15 @@ api.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+export const getUserProfile = () => api.get('/users/me');
+
+export const updateUserProfile = (profileData: { name?: string; department?: string; jobTitle?: string }) => {
+    return api.put('/users/me', profileData);
+};
+
+export const changeUserPassword = (passwordData: { oldPassword: string; newPassword: string }) => {
+    return api.post('/users/me/password', passwordData);
+};
 
 export default api;

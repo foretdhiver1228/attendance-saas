@@ -36,7 +36,7 @@ const Login: React.FC = () => {
 
             if (response.ok) {
                 const jwtToken = await response.text(); // Backend returns JWT as plain text
-                localStorage.setItem('jwtToken', jwtToken);
+                sessionStorage.setItem('jwtToken', jwtToken);
                 setMessage('Login successful! Redirecting...');
                 setTimeout(() => navigate('/'), 2000); // Redirect to home or dashboard
             } else {

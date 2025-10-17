@@ -38,6 +38,14 @@ public class AuthService {
 
     @Transactional
     public User signUp(SignUpRequest signUpRequest) {
+        if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
+            throw new RuntimeException("Error: Email is already in use!");
+        }
+
+        if (companyRepository.findByName(signUpRequest.getCompanyName()).isPresent()) {
+            throw new RuntimeException("Error: Company name is already in use!");
+        }
+
         // Create and save the company
         Company company = new Company();
         company.setName(signUpRequest.getCompanyName());
