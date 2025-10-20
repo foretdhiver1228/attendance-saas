@@ -1,16 +1,15 @@
-package com.example.attendance.controller;
-
 import com.example.attendance.dto.AttendanceRequest;
+import com.example.attendance.dto.WebSocketResponse;
 import com.example.attendance.entity.Attendance;
-import com.example.attendance.entity.User;
-import com.example.attendance.repository.AttendanceRepository;
-import com.example.attendance.repository.UserRepository;
+import com.example.attendance.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,29 +17,21 @@ import java.util.List;
 public class AttendanceController {
 
     @Autowired
-    private AttendanceRepository attendanceRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private AttendanceService attendanceService;
 
     @MessageMapping("/attendance")
     @SendTo("/topic/attendance")
-    public Attendance recordAttendance(AttendanceRequest attendanceRequest) throws Exception {
-        User user = userRepository.findByEmployeeId(attendanceRequest.getEmployeeId())
-                .orElseThrow(() -> new Exception("User not found with employeeId: " + attendanceRequest.getEmployeeId()));
-
-        Attendance attendance = new Attendance();
-        attendance.setUser(user);
-        attendance.setType(attendanceRequest.getType());
-        attendance.setLatitude(attendanceRequest.getLatitude());
-        attendance.setLongitude(attendanceRequest.getLongitude());
-        attendance.setTimestamp(LocalDateTime.now());
-
-        return attendanceRepository.save(attendance);
+    public WebSocketResponse<Attendance> recordAttendance(AttendanceRequest attendanceRequest) {
+        try {
+            Attendance newAttendance = attendanceService.recordAttendance(attendanceRequest);
+            return WebSocketResponse.success(newAttendance, attendanceRequest.getEmployeeId());
+        } catch (Exception e) {
+            return WebSocketResponse.error(e.getMessage(), attendanceRequest.getEmployeeId());
+        }
     }
 
     @GetMapping("/{employeeId}")
     public List<Attendance> getAttendanceByEmployeeId(@PathVariable String employeeId) {
-        return attendanceRepository.findByUser_EmployeeId(employeeId);
+        return attendanceService.getAttendanceByEmployeeId(employeeId);
     }
 }

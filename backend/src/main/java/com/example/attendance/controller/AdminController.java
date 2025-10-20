@@ -1,16 +1,19 @@
 package com.example.attendance.controller;
 
+import com.example.attendance.dto.CompanyLocationUpdateRequest;
+import com.example.attendance.entity.Company;
 import com.example.attendance.entity.User;
 import com.example.attendance.repository.UserRepository;
-import com.example.attendance.service.AuthService;
-import com.example.attendance.dto.SignUpRequest; // Assuming a DTO for user creation
+import com.example.attendance.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.security.Principal;
 import java.util.List;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -19,6 +22,9 @@ public class AdminController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -69,5 +75,18 @@ public class AdminController {
         }
         userRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/company")
+    public ResponseEntity<Company> getCompany(Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + principal.getName()));
+        return ResponseEntity.ok(user.getCompany());
+    }
+
+    @PutMapping("/company/location")
+    public ResponseEntity<Company> updateCompanyLocation(@RequestBody CompanyLocationUpdateRequest locationRequest, Principal principal) {
+        Company updatedCompany = userService.updateCompanyLocation(principal.getName(), locationRequest);
+        return ResponseEntity.ok(updatedCompany);
     }
 }

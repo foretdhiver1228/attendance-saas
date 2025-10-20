@@ -52,6 +52,12 @@ interface AttendanceRecord {
     longitude: number;
 }
 
+interface WebSocketResponse<T> {
+    data: T | null;
+    error: string | null;
+    employeeId: string;
+}
+
 const AttendanceTracker: React.FC = () => {
     const [stompClient, setStompClient] = useState<Client | null>(null);
     const [isConnected, setIsConnected] = useState(false);
@@ -101,12 +107,18 @@ const AttendanceTracker: React.FC = () => {
                 setStompClient(client);
 
                 // Subscribe to topics relevant to the user
-                client.subscribe('/topic/attendance', (attendanceRecord) => {
-                    const record: AttendanceRecord = JSON.parse(attendanceRecord.body);
-                    // Only update if the record belongs to the current user
-                    if (userProfile.employeeId === record.employeeId) {
-                        setMessage(`New attendance recorded: ${record.type}`);
-                        setAttendanceRecords((prevRecords) => [record, ...prevRecords].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+                client.subscribe('/topic/attendance', (message) => {
+                    const response: WebSocketResponse<AttendanceRecord> = JSON.parse(message.body);
+
+                    // Only process if the message is for the current user
+                    if (userProfile.employeeId === response.employeeId) {
+                        if (response.error) {
+                            setMessage(`Error: ${response.error}`);
+                        } else if (response.data) {
+                            const record = response.data;
+                            setMessage(`New attendance recorded: ${record.type}`);
+                            setAttendanceRecords((prevRecords) => [record, ...prevRecords].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+                        }
                     }
                 });
             },
@@ -134,34 +146,9 @@ const AttendanceTracker: React.FC = () => {
         };
     }, [userProfile]); // Re-run if userProfile changes
 
-    const getLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setLocation({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                    });
-                    setMessage('Location obtained.');
-                },
-                (error) => {
-                    console.error('Error getting location:', error);
-                    setMessage('Error getting location. Please enable location services.');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        } else {
-            setMessage('Geolocation is not supported by this browser.');
-        }
-    };
-
     const sendAttendance = (type: 'CHECK_IN' | 'CHECK_OUT') => {
         if (!stompClient || !isConnected) {
             setMessage('Not connected to WebSocket.');
-            return;
-        }
-        if (!location) {
-            setMessage('Please get your location first.');
             return;
         }
         if (!userProfile) {
@@ -169,18 +156,46 @@ const AttendanceTracker: React.FC = () => {
             return;
         }
 
-        const attendanceData = {
-            employeeId: userProfile.employeeId,
-            type: type,
-            latitude: location.latitude,
-            longitude: location.longitude,
+        const performCheckIn = (currentLocation: { latitude: number; longitude: number }) => {
+            const attendanceData = {
+                employeeId: userProfile.employeeId,
+                type: type,
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+            };
+
+            stompClient.publish({
+                destination: '/app/attendance',
+                body: JSON.stringify(attendanceData),
+            });
+            setMessage(`Sending ${type} request...`);
         };
 
-        stompClient.publish({
-            destination: '/app/attendance',
-            body: JSON.stringify(attendanceData),
-        });
-        setMessage(`Sending ${type} request...`);
+        if (location) {
+            performCheckIn(location);
+        } else {
+            if (navigator.geolocation) {
+                setMessage('Getting your location...');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                        };
+                        setLocation(newLocation);
+                        setMessage('Location obtained. Sending request...');
+                        performCheckIn(newLocation);
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                        setMessage('Error getting location. Please enable location services and try again.');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            } else {
+                setMessage('Geolocation is not supported by this browser.');
+            }
+        }
     };
 
     return (
@@ -225,9 +240,8 @@ const AttendanceTracker: React.FC = () => {
                                     </Typography>
                                 )}
                                 <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                    <Button variant="outlined" onClick={getLocation} disabled={!isConnected}>Get Location</Button>
-                                    <Button variant="contained" color="primary" onClick={() => sendAttendance('CHECK_IN')} disabled={!isConnected || !location}>Check In</Button>
-                                    <Button variant="contained" color="secondary" onClick={() => sendAttendance('CHECK_OUT')} disabled={!isConnected || !location}>Check Out</Button>
+                                    <Button variant="contained" color="primary" onClick={() => sendAttendance('CHECK_IN')} disabled={!isConnected}>Check In</Button>
+                                    <Button variant="contained" color="secondary" onClick={() => sendAttendance('CHECK_OUT')} disabled={!isConnected}>Check Out</Button>
                                 </Box>
                                 <Typography variant="h6" gutterBottom>Attendance Records</Typography>
                                 {attendanceRecords.length === 0 ? (

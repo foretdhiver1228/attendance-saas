@@ -18,5 +18,8 @@ public class Company {
 
     private String name;
 
-    // future fields can include address, industry, etc.
+    // Geofencing fields
+    private Double latitude; // 위도
+    private Double longitude; // 경도
+    private Double geofenceRadius; // meters
 }

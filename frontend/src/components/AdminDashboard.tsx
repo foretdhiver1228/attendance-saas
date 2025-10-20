@@ -61,8 +61,17 @@ interface EditUserFormData extends Partial<User> {
 }
 
 
+interface Company {
+    id: number;
+    name: string;
+    latitude: number | null;
+    longitude: number | null;
+    geofenceRadius: number | null;
+}
+
 const AdminDashboard: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
+    const [company, setCompany] = useState<Company | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [openCreateDialog, setOpenCreateDialog] = useState<boolean>(false);
@@ -89,10 +98,8 @@ const AdminDashboard: React.FC = () => {
 
     const [newUserData, setNewUserData] = useState<CreateUserFormData>(initialNewUserData);
 
-    // ... (All handler functions like fetchUsers, handleCreateUser, etc. remain the same)
     const fetchUsers = async () => {
         try {
-            setLoading(true);
             const response = await api.get<User[]>('/admin/users');
             setUsers(response.data);
         } catch (err: any) {
@@ -105,14 +112,53 @@ const AdminDashboard: React.FC = () => {
             } else {
                 setError('Failed to fetch users.');
             }
-        } finally {
-            setLoading(false);
+        }
+    };
+
+    const fetchCompany = async () => {
+        try {
+            const response = await api.get<Company>('/admin/company');
+            setCompany(response.data);
+        } catch (err) {
+            console.error('Error fetching company data:', err);
+            setError('Failed to fetch company settings.');
         }
     };
 
     useEffect(() => {
-        fetchUsers();
+        const fetchAllData = async () => {
+            setLoading(true);
+            await Promise.all([fetchUsers(), fetchCompany()]);
+            setLoading(false);
+        };
+        fetchAllData();
     }, []);
+
+    const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (company) {
+            setCompany({ ...company, [e.target.name]: e.target.value ? parseFloat(e.target.value) : null });
+        }
+    };
+
+    const handleSaveLocation = async () => {
+        if (!company) return;
+        try {
+            setLoading(true);
+            const updateData = {
+                latitude: company.latitude,
+                longitude: company.longitude,
+                geofenceRadius: company.geofenceRadius,
+            };
+            await api.put('/admin/company/location', updateData);
+            setError(null); // Clear previous errors
+            alert('Location settings saved successfully!');
+        } catch (err) {
+            console.error('Error saving company location:', err);
+            setError('Failed to save location settings.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleCreateUser = async () => {
         try {
@@ -230,9 +276,58 @@ const AdminDashboard: React.FC = () => {
     return (
         <Container component="main" maxWidth="lg" sx={{ mt: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom>
-                Admin Dashboard - Employee Management
+                Admin Dashboard
             </Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+            <Card sx={{ mb: 4 }}>
+                <CardContent>
+                    <Typography variant="h5" gutterBottom>Company Geofence Settings</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Set the central coordinates and the allowed radius (in meters) for employee check-ins.
+                    </Typography>
+                    {company && (
+                        <Box component="form" noValidate autoComplete="off">
+                            <TextField
+                                label="Latitude"
+                                name="latitude"
+                                type="number"
+                                fullWidth
+                                margin="normal"
+                                value={company.latitude || ''}
+                                onChange={handleLocationChange}
+                            />
+                            <TextField
+                                label="Longitude"
+                                name="longitude"
+                                type="number"
+                                fullWidth
+                                margin="normal"
+                                value={company.longitude || ''}
+                                onChange={handleLocationChange}
+                            />
+                            <TextField
+                                label="Geofence Radius (meters)"
+                                name="geofenceRadius"
+                                type="number"
+                                fullWidth
+                                margin="normal"
+                                value={company.geofenceRadius || ''}
+                                onChange={handleLocationChange}
+                            />
+                        </Box>
+                    )}
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                    <Button variant="contained" onClick={handleSaveLocation} disabled={loading || !company}>
+                        Save Settings
+                    </Button>
+                </CardActions>
+            </Card>
+
+            <Typography variant="h5" component="h2" gutterBottom>
+                Employee Management
+            </Typography>
             <Button variant="contained" color="primary" onClick={() => setOpenCreateDialog(true)} sx={{ mb: 2 }}>
                 Create New User
             </Button>
