@@ -28,11 +28,20 @@ public class UserService {
         if (updateRequest.getName() != null) {
             user.setName(updateRequest.getName());
         }
+        if (updateRequest.getEmployeeId() != null) {
+            user.setEmployeeId(updateRequest.getEmployeeId());
+        }
         if (updateRequest.getDepartment() != null) {
             user.setDepartment(updateRequest.getDepartment());
         }
         if (updateRequest.getJobTitle() != null) {
             user.setJobTitle(updateRequest.getJobTitle());
+        }
+        if (updateRequest.getEmploymentType() != null) {
+            user.setEmploymentType(updateRequest.getEmploymentType());
+        }
+        if (updateRequest.getSalary() != null) {
+            user.setSalary(updateRequest.getSalary());
         }
 
         return userRepository.save(user);

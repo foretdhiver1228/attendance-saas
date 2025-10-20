@@ -7,6 +7,9 @@ import lombok.Setter;
 @Setter
 public class UserUpdateRequest {
     private String name;
+    private String employeeId;
     private String department;
     private String jobTitle;
+    private String employmentType;
+    private Double salary;
 }

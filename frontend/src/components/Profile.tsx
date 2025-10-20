@@ -19,6 +19,8 @@ interface UserProfile {
     name: string;
     department: string;
     jobTitle: string;
+    employmentType: string;
+    salary: number;
     role: string;
 }
 
@@ -71,8 +73,11 @@ const Profile: React.FC = () => {
             setSuccess('');
             const updateData = {
                 name: profile.name,
+                employeeId: profile.employeeId,
                 department: profile.department,
                 jobTitle: profile.jobTitle,
+                employmentType: profile.employmentType,
+                salary: profile.salary,
             };
             const response = await updateUserProfile(updateData);
             setProfile(response.data);
@@ -157,10 +162,12 @@ const Profile: React.FC = () => {
                         />
                         <TextField
                             label="Employee ID"
-                            value={profile.employeeId || 'N/A'}
+                            name="employeeId"
+                            value={profile.employeeId || ''}
                             fullWidth
                             margin="normal"
-                            InputProps={{ readOnly: true }}
+                            disabled={!isEditing}
+                            onChange={handleInputChange}
                         />
                         <TextField
                             label="Name"
@@ -184,6 +191,25 @@ const Profile: React.FC = () => {
                             label="Job Title"
                             name="jobTitle"
                             value={profile.jobTitle || ''}
+                            fullWidth
+                            margin="normal"
+                            disabled={!isEditing}
+                            onChange={handleInputChange}
+                        />
+                        <TextField
+                            label="Employment Type"
+                            name="employmentType"
+                            value={profile.employmentType || ''}
+                            fullWidth
+                            margin="normal"
+                            disabled={!isEditing}
+                            onChange={handleInputChange}
+                        />
+                        <TextField
+                            label="Salary"
+                            name="salary"
+                            type="number"
+                            value={profile.salary || 0}
                             fullWidth
                             margin="normal"
                             disabled={!isEditing}
