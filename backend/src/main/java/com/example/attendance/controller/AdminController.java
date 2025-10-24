@@ -2,6 +2,7 @@ package com.example.attendance.controller;
 
 import com.example.attendance.dto.CompanyLocationUpdateRequest;
 import com.example.attendance.entity.Company;
+import com.example.attendance.entity.Role;
 import com.example.attendance.entity.User;
 import com.example.attendance.repository.UserRepository;
 import com.example.attendance.service.UserService;
@@ -37,7 +38,16 @@ public class AdminController {
 
     // Endpoint to create a new user (by admin)
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User newUser) {
+    public ResponseEntity<User> createUser(@RequestBody User newUser, Principal principal) {
+        User adminUser = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Admin user not found: " + principal.getName()));
+
+        newUser.setCompany(adminUser.getCompany());
+
+        if (newUser.getRole() == null) {
+            newUser.setRole(Role.EMPLOYEE);
+        }
+
         // Ensure password is encoded before saving
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         User savedUser = userRepository.save(newUser);

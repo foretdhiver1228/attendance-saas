@@ -60,7 +60,7 @@ public class AuthService {
         user.setRole(Role.ADMIN); // Assign ADMIN role to the first user of the company
         // In a real app, employeeId would be generated or assigned differently
         // For now, we can create a temporary one.
-        user.setEmployeeId(signUpRequest.getUserName().toLowerCase() + "_" + company.getId());
+        user.setEmployeeId(signUpRequest.getUserName().toLowerCase().replace(" ", "_") + "_" + company.getId());
 
         return userRepository.save(user);
     }

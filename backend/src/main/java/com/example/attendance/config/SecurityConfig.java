@@ -50,8 +50,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/ws/**").permitAll() // Permit all requests to WebSocket endpoint
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "EMPLOYEE") // Allow ADMIN or EMPLOYEE to access user endpoints
-                        .requestMatchers("/api/attendance/**").permitAll() // TEMPORARY: Permit all to debug 403
+                        .requestMatchers("/api/attendance/**").hasAnyRole("ADMIN", "EMPLOYEE") // TEMPORARY: Permit all to debug 403
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Use stateless session for JWT

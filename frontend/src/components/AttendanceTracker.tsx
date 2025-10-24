@@ -108,17 +108,31 @@ const AttendanceTracker: React.FC = () => {
 
                 // Subscribe to topics relevant to the user
                 client.subscribe('/topic/attendance', (message) => {
+                    console.log("Received message from /topic/attendance:", message.body);
                     const response: WebSocketResponse<AttendanceRecord> = JSON.parse(message.body);
+                    console.log("Parsed response:", response);
 
                     // Only process if the message is for the current user
                     if (userProfile.employeeId === response.employeeId) {
+                        console.log("Employee ID matches. Processing message...");
                         if (response.error) {
                             setMessage(`Error: ${response.error}`);
                         } else if (response.data) {
                             const record = response.data;
                             setMessage(`New attendance recorded: ${record.type}`);
-                            setAttendanceRecords((prevRecords) => [record, ...prevRecords].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+                            setAttendanceRecords((prevRecords) => {
+                                // Prevent duplicates caused by StrictMode double-rendering
+                                if (prevRecords.some(r => r.id === record.id)) {
+                                    return prevRecords;
+                                }
+                                return [record, ...prevRecords].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                            });
                         }
+                    } else {
+                        console.log("Employee ID does not match. Ignoring message.", { 
+                            currentUser: userProfile.employeeId, 
+                            messageFor: response.employeeId 
+                        });
                     }
                 });
             },
@@ -190,7 +204,7 @@ const AttendanceTracker: React.FC = () => {
                         console.error('Error getting location:', error);
                         setMessage('Error getting location. Please enable location services and try again.');
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 }
                 );
             } else {
                 setMessage('Geolocation is not supported by this browser.');

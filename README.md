@@ -20,7 +20,7 @@
 - **회원가입 및 로그인:** 정상 작동합니다.
 - **사용자 프로필 조회 (`/api/users/me`):** 정상 작동합니다.
 - **WebSocket 연결:** 정상 작동합니다.
-- **출퇴근 기록 조회 (`/api/attendance/{employeeId}`):** 현재 403 Forbidden 오류가 발생하여 디버깅 중입니다. (`SecurityConfig.java`에서 임시로 `permitAll()` 설정)
+- **출퇴근 기록 조회 (`/api/attendance/{employeeId}`):** 정상 작동합니다.
 
 ## 🛠️ 기술 스택
 
@@ -78,3 +78,26 @@ npm start
 ```
 
 애플리케이션이 `http://localhost:3000`에서 열립니다.
+
+## 📝 최근 변경사항 (2025-10-24)
+
+*   **Backend:**
+    *   **보안:**
+        *   `/api/admin/**` 엔드포인트에 `ADMIN` 역할 요구 사항 추가.
+        *   `/api/attendance/**` 엔드포인트에 `ADMIN` 또는 `EMPLOYEE` 역할 요구 사항 추가.
+    *   **관리자:**
+        *   관리자가 새 사용자를 생성할 때 사용자가 관리자의 회사에 자동으로 연결되도록 수정.
+        *   새로 생성된 사용자의 기본 역할을 `EMPLOYEE`로 설정.
+    *   **출석:**
+        *   출석 기록을 위한 WebSocket 엔드포인트를 `AttendanceController`에서 새로운 `AttendanceWsController`로 이동.
+    *   **인증:**
+        *   직원 ID 생성 시 사용자 이름의 공백을 밑줄로 바꾸도록 수정.
+    *   **설정:**
+        *   `application.properties`의 `jwt.secret` 업데이트.
+        *   `WebConfig.java` 삭제.
+
+*   **Frontend:**
+    *   **출석 트래커:**
+        *   WebSocket 메시지 디버깅을 위한 로그 추가.
+        *   중복된 출석 기록이 추가되는 것을 방지.
+        *   위치 정보 설정 변경 (정확도 낮춤, 타임아웃 증가).
