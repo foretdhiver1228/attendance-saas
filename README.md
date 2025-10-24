@@ -15,6 +15,12 @@
   - 직원의 생성, 정보 수정, 삭제 (CRUD)
   - 모바일/데스크탑 환경에 반응하는 UI
 
+## 📸 스크린샷
+
+**출결 서비스 화면**
+
+![Attendance Service](frontend/public/images/thumbnail_1.jpg)
+
 ## 🚀 현재 상태
 
 - **회원가입 및 로그인:** 정상 작동합니다.
