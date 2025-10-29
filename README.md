@@ -85,6 +85,34 @@ npm start
 
 애플리케이션이 `http://localhost:3000`에서 열립니다.
 
+## ⚙️ 설정
+
+### SQL 쿼리 로깅
+
+JPA가 생성하는 SQL 쿼리를 콘솔에서 확인하고 싶을 때, `backend/src/main/resources/application.properties` 파일에서 다음 설정을 활성화할 수 있습니다.
+
+```properties
+# --- SQL 출력 ---
+# JPA가 생성하는 SQL을 보여줍니다.
+spring.jpa.show-sql=true
+# SQL을 보기 좋게 포맷팅합니다.
+spring.jpa.properties.hibernate.format_sql=true
+# SQL 실행 시 주석을 추가하여 어떤 코드에서 실행되었는지 추적하기 용이하게 합니다.
+spring.jpa.properties.hibernate.use_sql_comments=true
+
+# --- 바인딩 파라미터까지 출력 (Hibernate 6) ---
+# SQL 쿼리 로그를 DEBUG 레벨로 출력합니다.
+logging.level.org.hibernate.SQL=debug
+# PreparedStatement에 바인딩되는 파라미터 값을 TRACE 레벨로 출력합니다.
+logging.level.org.hibernate.orm.jdbc.bind=trace
+```
+
+## 📝 최근 변경사항 (2025-10-29)
+
+*   **Backend:**
+    *   **설정:**
+        *   `application.properties`에서 중복된 SQL 로깅 설정을 정리하여 가독성을 개선했습니다.
+
 ## 📝 최근 변경사항 (2025-10-24)
 
 *   **Backend:**
