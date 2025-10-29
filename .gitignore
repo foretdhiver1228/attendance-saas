@@ -1,3 +1,9 @@
 /backend/data/
 .mailmap
 data/
+
+# Editor-specific files
+.history/
+
+# Temporary files
+backend/employeeId
